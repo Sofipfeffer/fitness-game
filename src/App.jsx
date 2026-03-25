@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import "./App.css";
 
 import { db } from "./firebase";
-import { doc, setDoc, onSnapshot } from "firebase/firestore";
+import { doc, setDoc, onSnapshot, getDoc } from "firebase/firestore";
 
 const activities = [
   { name: "Gym", points: 10 },
@@ -25,8 +25,27 @@ const rewards = {
 };
 
 export default function App() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState(null);
   const [lastAction, setLastAction] = useState(null);
+
+  // 🔥 INICIALIZAR UNA SOLA VEZ SI NO EXISTE
+  useEffect(() => {
+    const init = async () => {
+      const docRef = doc(db, "game", "points");
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        await setDoc(docRef, {
+          users: [
+            { name: "Sofi", points: 0 },
+            { name: "Fede", points: 0 },
+          ],
+        });
+      }
+    };
+
+    init();
+  }, []);
 
   // 🔥 ESCUCHAR CAMBIOS EN TIEMPO REAL
   useEffect(() => {
@@ -39,7 +58,12 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // ➕ SUMAR PUNTOS (GUARDANDO EN FIREBASE)
+  // ⏳ LOADING
+  if (!users) {
+    return <p>Cargando...</p>;
+  }
+
+  // ➕ SUMAR PUNTOS
   const addPoints = async (index, pts, label) => {
     const newUsers = [...users];
     newUsers[index].points += pts;
@@ -77,26 +101,9 @@ export default function App() {
     }
   };
 
-  // 🟡 BOTÓN PARA INICIALIZAR (USAR UNA SOLA VEZ)
-  const initializeData = async () => {
-    await setDoc(doc(db, "game", "points"), {
-      users: [
-        { name: "Sofi", points: 0 },
-        { name: "Fede", points: 0 },
-      ],
-    });
-  };
-
   return (
     <div className="container">
       <h1>Juego Fitness 💪</h1>
-
-      {/* 🔴 SI NO HAY DATOS, MOSTRAR BOTÓN */}
-      {users.length === 0 && (
-        <button onClick={initializeData}>
-          Inicializar juego
-        </button>
-      )}
 
       <div className="users">
         {users.map((user, i) => (
