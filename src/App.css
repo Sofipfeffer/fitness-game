@@ -68,3 +68,13 @@ h2{
   background: #ec4899;
   color: white;
 }
+
+.tit-clase{
+  color:white;
+  margin-top:10px;
+}
+
+.undo{
+  padding:5px;
+  margin:10px;
+}

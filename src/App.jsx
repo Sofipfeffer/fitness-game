@@ -26,20 +26,23 @@ const rewards = {
 
 export default function App() {
   const [users, setUsers] = useState(null);
+  const [history, setHistory] = useState([]);
   const [lastAction, setLastAction] = useState(null);
 
-  // 🔥 INICIALIZAR UNA SOLA VEZ SI NO EXISTE
+  const docRef = doc(db, "game", "points");
+
+  // 🟡 Inicializar si no existe
   useEffect(() => {
     const init = async () => {
-      const docRef = doc(db, "game", "points");
-      const docSnap = await getDoc(docRef);
+      const snap = await getDoc(docRef);
 
-      if (!docSnap.exists()) {
+      if (!snap.exists()) {
         await setDoc(docRef, {
           users: [
             { name: "Sofi", points: 0 },
             { name: "Fede", points: 0 },
           ],
+          history: [],
         });
       }
     };
@@ -47,63 +50,123 @@ export default function App() {
     init();
   }, []);
 
-  // 🔥 ESCUCHAR CAMBIOS EN TIEMPO REAL
+  // 🔥 Escuchar cambios
   useEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, "game", "points"), (docSnap) => {
-      if (docSnap.exists()) {
-        setUsers(docSnap.data().users);
+    const unsubscribe = onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setUsers(data.users);
+        setHistory(data.history || []);
       }
     });
 
     return () => unsubscribe();
   }, []);
 
-  // ⏳ LOADING
-  if (!users) {
-    return <p>Cargando...</p>;
-  }
+  if (!users) return <p>Cargando...</p>;
 
-  // ➕ SUMAR PUNTOS
+  const getDate = () => {
+    const d = new Date();
+    return d.toLocaleDateString();
+  };
+
+  // ➕ SUMAR
   const addPoints = async (index, pts, label) => {
     const newUsers = [...users];
     newUsers[index].points += pts;
 
-    await setDoc(doc(db, "game", "points"), {
+    const newEntry = {
+      text: `${users[index].name} +${pts} por ${label}`,
+      date: getDate(),
+      type: "add",
+      userIndex: index,
+      value: pts,
+    };
+
+    await setDoc(docRef, {
       users: newUsers,
+      history: [newEntry, ...history],
     });
 
     setLastAction({ index, pts, label, id: Date.now() });
   };
 
-  // 😈 CANJE INDIVIDUAL
-  const redeemIndividual = async (index, cost) => {
+  // 😈 INDIVIDUAL
+  const redeemIndividual = async (index, cost, name) => {
     const newUsers = [...users];
+
     if (newUsers[index].points >= cost) {
       newUsers[index].points -= cost;
 
-      await setDoc(doc(db, "game", "points"), {
+      const newEntry = {
+        text: `${users[index].name} -${cost} por ${name}`,
+        date: getDate(),
+        type: "redeem",
+        userIndex: index,
+        value: cost,
+      };
+
+      await setDoc(docRef, {
         users: newUsers,
+        history: [newEntry, ...history],
       });
     }
   };
 
-  // 🤝 CANJE COMPARTIDO
-  const redeemShared = async (cost) => {
+  // 🤝 COMPARTIDO
+  const redeemShared = async (cost, name) => {
     if (users.every((u) => u.points >= cost)) {
       const newUsers = users.map((u) => ({
         ...u,
         points: u.points - cost,
       }));
 
-      await setDoc(doc(db, "game", "points"), {
+      const newEntry = {
+        text: `Ambos -${cost} por ${name}`,
+        date: getDate(),
+        type: "shared",
+        value: cost,
+      };
+
+      await setDoc(docRef, {
         users: newUsers,
+        history: [newEntry, ...history],
       });
     }
+  };
+
+  // ↩️ DESHACER
+  const undoLast = async () => {
+    if (history.length === 0) return;
+
+    const last = history[0];
+    const newUsers = [...users];
+
+    if (last.type === "add") {
+      newUsers[last.userIndex].points -= last.value;
+    }
+
+    if (last.type === "redeem") {
+      newUsers[last.userIndex].points += last.value;
+    }
+
+    if (last.type === "shared") {
+      newUsers.forEach((u) => (u.points += last.value));
+    }
+
+    await setDoc(docRef, {
+      users: newUsers,
+      history: history.slice(1),
+    });
   };
 
   return (
     <div className="container">
       <h1>Juego Fitness 💪</h1>
+
+      <button onClick={undoLast} className="undo">
+        ↩️ Deshacer último
+      </button>
 
       <div className="users">
         {users.map((user, i) => (
@@ -145,31 +208,36 @@ export default function App() {
       )}
 
       <div className="rewards">
-        <h2>Recompensas compartidas 🤝</h2>
+        <h2 class="tit-clase">Recompensas compartidas 🤝</h2>
         {rewards.shared.map((r, i) => (
-          <button
-            key={i}
-            onClick={() => redeemShared(r.cost)}
-            className="shared"
-          >
+          <button key={i} onClick={() => redeemShared(r.cost, r.name)} className="shared">
             {r.name} ({r.cost})
           </button>
         ))}
 
-        <h2>Recompensas individuales 😈</h2>
+        <h2 class="tit-clase">Recompensas individuales 😈</h2>
         {users.map((user, i) => (
           <div key={i}>
             <p>{user.name}</p>
             {rewards.individual.map((r, idx) => (
               <button
                 key={idx}
-                onClick={() => redeemIndividual(i, r.cost)}
+                onClick={() => redeemIndividual(i, r.cost, r.name)}
                 className="individual"
               >
                 {r.name} ({r.cost})
               </button>
             ))}
           </div>
+        ))}
+      </div>
+
+      <div className="history">
+        <h2 class="tit-clase">Historial 📜</h2>
+        {history.map((h, i) => (
+          <p key={i}>
+            {h.date} — {h.text}
+          </p>
         ))}
       </div>
     </div>
