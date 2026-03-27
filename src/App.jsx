@@ -5,12 +5,17 @@ import "./App.css";
 import { db } from "./firebase";
 import { doc, setDoc, onSnapshot, getDoc } from "firebase/firestore";
 
+import sofiImg from "../imgs/Sofi.png";
+import fedeImg from "../imgs/Fede.png";
+
 const activities = [
   { name: "Gym", points: 10 },
+  { name: "Actividad extra", points: 10 },
   { name: "Caminata", points: 6 },
   { name: "Bici", points: 8 },
-  { name: "Actividad extra", points: 10 },
   { name: "Movilidad", points: 4 },
+  { name: "Desplazo en bici/caminata", points: 2 },
+
 ];
 
 const rewards = {
@@ -162,16 +167,17 @@ export default function App() {
 
   return (
     <div className="container">
-      <h1>Juego Fitness 💪</h1>
-
-      <button onClick={undoLast} className="undo">
-        ↩️ Deshacer último
-      </button>
 
       <div className="users">
         {users.map((user, i) => (
           <div key={i} className="card">
-            <h2>{user.name}</h2>
+              <img
+    src={user.name === "Sofi" ? sofiImg : fedeImg}
+    alt={user.name}
+    className="avatar"
+  />
+
+  <h2>{user.name}</h2>
 
             <motion.div
               key={user.points}
@@ -207,14 +213,25 @@ export default function App() {
         </motion.div>
       )}
 
+            <button onClick={undoLast} className="undo">
+        ↩️
+      </button>
+
       <div className="rewards">
+        <div className="iconImg">
+          <img src={sofiImg}></img>
+          <img src={fedeImg}></img>
+        </div>
         <h2 class="tit-clase">Recompensas compartidas 🤝</h2>
         {rewards.shared.map((r, i) => (
           <button key={i} onClick={() => redeemShared(r.cost, r.name)} className="shared">
             {r.name} ({r.cost})
           </button>
         ))}
-
+<div className="iconImgVs">
+          <img src={sofiImg}></img>
+          <img src={fedeImg}></img>
+        </div>
         <h2 class="tit-clase">Recompensas individuales 😈</h2>
         {users.map((user, i) => (
           <div key={i}>

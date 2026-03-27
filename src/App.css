@@ -4,6 +4,7 @@
   margin: auto;
   padding: 20px;
   font-family: Arial, sans-serif;
+  background-color: #29196B;
 }
 
 h1, h2 {
@@ -11,7 +12,7 @@ h1, h2 {
 }
 
 h2{
-  color:black;
+  color:#5E22AC;
 }
 
 .users {
@@ -19,11 +20,30 @@ h2{
   gap: 10px;
 }
 
+.iconImg {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.iconImgVs {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top:20px;
+}
+
+.iconImg img, .iconImgVs img{
+  width:10%;
+}
+
 .card {
   flex: 1;
   background: #fff;
-  padding: 15px;
-  border-radius: 12px;
+  border-radius: 20px;
+  padding:10px 0px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
@@ -31,15 +51,18 @@ h2{
   font-size: 24px;
   font-weight: bold;
   text-align: center;
+  background-color: #8B7EC2;
+  color:white;
+  padding: 10px;
 }
 
 .buttons button {
-  width: 100%;
+  width: 90%;
   margin-top: 5px;
-  padding: 5px;
+  padding: 10px;
   border: none;
   border-radius: 8px;
-  background: black;
+  background: #8039C7;
   color: white;
   cursor: pointer;
 }
@@ -60,12 +83,12 @@ h2{
 }
 
 .shared {
-  background: #3b82f6;
+  background: #9D4CEC;
   color: white;
 }
 
 .individual {
-  background: #ec4899;
+  background: #A56DDC;
   color: white;
 }
 
@@ -77,4 +100,31 @@ h2{
 .undo{
   padding:5px;
   margin:10px;
+  font-size: 30px;
+background: transparent;
+border: none;
+}
+
+.hex {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #7c3aed, #9333ea);
+  clip-path: polygon(
+    25% 5%, 75% 5%, 
+    100% 50%, 
+    75% 95%, 25% 95%, 
+    0% 50%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 10px;
 }
